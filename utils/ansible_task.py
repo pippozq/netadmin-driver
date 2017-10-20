@@ -143,7 +143,8 @@ class AnsibleTask(TaskQueueManager):
     def get_result(self):
         return self.results_callback.get_ansible_result()
 
-    async def run_ansible_playbook(self):
+    @coroutine
+    def run_ansible_playbook(self):
         tqm = None
         play_source = dict(
             name="Ansible Play",
