@@ -1,19 +1,47 @@
-from __future__ import (absolute_import, division, print_function)
 from collections import namedtuple
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
+from ansible.inventory.data import InventoryData
 from ansible.inventory.manager import InventoryManager
 from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.plugins.callback import CallbackBase
 
 from tornado.gen import coroutine, Return
-
+from tornado.options import options
 
 __metaclass__ = type
 
 DEFAULT_CONNECTION = 'ssh'
 DEFAULT_TRANSPORT = 'paramiko'
+
+
+class InnerInventoryManager(InventoryManager):
+    def __init__(self, loader, hosts):
+
+        # base objects
+        self._loader = loader
+        self._hosts = hosts
+        self._inventory = InventoryData()
+
+        # a list of host(names) to contain current inquiries to
+        self._restriction = None
+        self._subset = None
+
+        # caches
+        self._hosts_patterns_cache = {}  # resolved full patterns
+        self._pattern_cache = {}  # resolved individual patterns
+        self._inventory_plugins = []  # for generating inventory
+        super(InnerInventoryManager, self).__init__(loader, None)
+        self._set_hosts()
+
+    def _set_hosts(self):
+        if isinstance(self._hosts, str):
+            _host = list()
+            _host.append(self._hosts)
+            self._hosts = _host
+        for h in self._hosts:
+            self._inventory.add_host(host=h)
 
 
 class ResultCallback(CallbackBase):
@@ -51,7 +79,7 @@ class ResultCallback(CallbackBase):
         return self.result
 
 
-class AnsibleUtil(TaskQueueManager):
+class AnsibleTask(TaskQueueManager):
 
     remote_user = ''
     password_dict = dict()
@@ -66,10 +94,11 @@ class AnsibleUtil(TaskQueueManager):
 
     play_tasks_list = None
 
-    def __init__(self, host, user_info,play_tasks_list, forks_number=5):
-        self.Options = namedtuple('Options', ['remote_user', 'connection', 'module_path', 'forks', 'become',
+    def __init__(self, host, user, tasks, forks_number=5):
+        self.Options = namedtuple('Options', ['remote_user','connection','module_path', 'forks', 'become',
                                               'become_method', 'become_user', 'check', 'transport','host_key_checking',
-                                              'private_key_file', 'record_host_keys'])
+                                              'private_key_file','record_host_keys', 'diff'])
+
         self.variable_manager = VariableManager()
         self.loader = DataLoader()
         self.host = list()
@@ -77,8 +106,16 @@ class AnsibleUtil(TaskQueueManager):
             self.host.append(host)
         elif isinstance(host, list):
             self.host = host
-        self.remote_user = user_info['remote_user'] if 'remote_user' in user_info else 'root'
-        self.password_dict['password'] = user_info['password'] if 'password' in user_info else None
+
+        if user is None:
+            self.remote_user = 'root'
+            self.password_dict['password'] = None
+        else:
+            self.remote_user = user['name'] if 'name' in user else 'root'
+            self.password_dict['password'] = user['password'] if 'password' in user else None
+
+        # ssh key
+        self.ssh_key_file = None if options.ssh_key_file is None else options.ssh_key_file
 
         self.options = self.Options(remote_user=self.remote_user,
                                     connection=DEFAULT_CONNECTION,
@@ -91,13 +128,14 @@ class AnsibleUtil(TaskQueueManager):
                                     transport=DEFAULT_TRANSPORT,
                                     host_key_checking=False,
                                     record_host_keys=False,
-                                    private_key_file='keys/id_rsa')
+                                    private_key_file=self.ssh_key_file,
+                                    diff=False)
 
         self.results_callback = ResultCallback()
-        self.inventory = InventoryManager(loader=self.loader)
-        self.variable_manager.set_inventory(self.inventory)
+        self.inventory = InnerInventoryManager(loader=self.loader, hosts=self.host)
+        self.variable_manager = VariableManager(loader=self.loader, inventory=self.inventory)
 
-        self.play_tasks_list = play_tasks_list
+        self.play_tasks_list = tasks
 
         TaskQueueManager.__init__(self, self.inventory, self.variable_manager,
                                   self.loader, self.options, self.password_dict, self.results_callback)
@@ -105,8 +143,7 @@ class AnsibleUtil(TaskQueueManager):
     def get_result(self):
         return self.results_callback.get_ansible_result()
 
-    @coroutine
-    def run_ansible(self):
+    async def run_ansible_playbook(self):
         tqm = None
         play_source = dict(
             name="Ansible Play",
