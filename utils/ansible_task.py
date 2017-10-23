@@ -112,7 +112,7 @@ class AnsibleTask(TaskQueueManager):
             self.password_dict['password'] = None
         else:
             self.remote_user = user['name'] if 'name' in user else 'root'
-            self.password_dict['password'] = user['password'] if 'password' in user else None
+            self.password_dict['conn_pass'] = user['password'] if 'password' in user else None
 
         # ssh key
         self.ssh_key_file = None if options.ssh_key_file is None else options.ssh_key_file
@@ -130,6 +130,7 @@ class AnsibleTask(TaskQueueManager):
                                     record_host_keys=False,
                                     private_key_file=self.ssh_key_file,
                                     diff=False)
+
 
         self.results_callback = ResultCallback()
         self.inventory = InnerInventoryManager(loader=self.loader, hosts=self.host)
