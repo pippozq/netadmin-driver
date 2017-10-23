@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from tornado.web import RequestHandler
-from tornado.gen import coroutine, Return
+from tornado.gen import coroutine
 from tornado.escape import json_decode
 from concurrent.futures import ThreadPoolExecutor
 
@@ -45,4 +45,4 @@ class AnsibleController(RequestHandler):
             for key in result_detail_dict.keys():
                 result_detail_dict[key] = result_detail_dict[key].replace('\\n', '').replace('\\r', '').replace('\\t', '')
                 result_detail_dict[key] = json_decode(result_detail_dict[key])
-            raise Return(self.return_json(code, result_detail_dict))
+            return self.return_json(code, result_detail_dict)

@@ -7,7 +7,7 @@ from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.plugins.callback import CallbackBase
 
-from tornado.gen import coroutine, Return
+from tornado.gen import coroutine
 from tornado.options import options
 
 __metaclass__ = type
@@ -156,7 +156,7 @@ class AnsibleTask(TaskQueueManager):
         play = Play().load(play_source, variable_manager=self.variable_manager, loader=self.loader)
         try:
             result = self.run(play)
-            raise Return(result)
+            return result
         finally:
             if tqm is not None:
                 tqm.cleanup()
