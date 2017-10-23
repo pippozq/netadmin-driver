@@ -13,6 +13,7 @@ from tornado.options import options
 __metaclass__ = type
 
 DEFAULT_CONNECTION = 'ssh'
+LOCAL_CONNECTION = 'local'
 DEFAULT_TRANSPORT = 'paramiko'
 
 
@@ -94,7 +95,7 @@ class AnsibleTask(TaskQueueManager):
 
     play_tasks_list = None
 
-    def __init__(self, host, user, tasks, forks_number=5):
+    def __init__(self, host, user, tasks, connection=None, forks_number=5):
         self.Options = namedtuple('Options', ['remote_user','connection','module_path', 'forks', 'become',
                                               'become_method', 'become_user', 'check', 'transport','host_key_checking',
                                               'private_key_file','record_host_keys', 'diff'])
@@ -116,9 +117,8 @@ class AnsibleTask(TaskQueueManager):
 
         # ssh key
         self.ssh_key_file = None if options.ssh_key_file is None else options.ssh_key_file
-
         self.options = self.Options(remote_user=self.remote_user,
-                                    connection=DEFAULT_CONNECTION,
+                                    connection=DEFAULT_CONNECTION if connection is None else LOCAL_CONNECTION,
                                     module_path=None,
                                     forks=forks_number,
                                     become=None,
@@ -130,7 +130,6 @@ class AnsibleTask(TaskQueueManager):
                                     record_host_keys=False,
                                     private_key_file=self.ssh_key_file,
                                     diff=False)
-
 
         self.results_callback = ResultCallback()
         self.inventory = InnerInventoryManager(loader=self.loader, hosts=self.host)
