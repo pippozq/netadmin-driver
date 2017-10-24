@@ -27,5 +27,6 @@ class Juniper(AnsbileModel):
     def commands(self, args):
         self.ansible_module_name = 'junos_command'
         self.action_dict['commands'] = args
+        self.action_dict['display'] = 'json'
 
 
