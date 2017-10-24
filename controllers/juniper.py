@@ -14,8 +14,9 @@ class JuniperCommandsController(AnsibleController):
     async def get(self):
         eg = dict()
         eg['host'] = dict(necessary=True, type='string or list[string,]')
-        eg['user'] = dict(necessary=False, type='dict', name=dict(default='root'), password=dict(default=None))
-        eg['command'] = dict(necessary=False, type='string', eg='ls')
+        eg['user'] = dict(necessary=True, type='dict', name=dict(default='root'), password=dict(default=None))
+        eg['command'] = dict(necessary=True, type='string', eg='ls')
+        eg['display'] = dict(necessary=False, type='string', eg='json|xml|set', default='text')
 
         self.write(self.return_json(0, eg))
 
@@ -25,8 +26,9 @@ class JuniperCommandsController(AnsibleController):
         try:
             host = self.vars['host']
             command = self.vars['command']
+            display = self.vars['display'] if 'display' in self.vars else 'text'
             s = m.Juniper()
-            s.commands(command)
+            s.commands(command, display)
             tasks = list()
             tasks.append(s.ansible_task())
             result = await self.run_playbook(host, self.user, tasks, 'local')
