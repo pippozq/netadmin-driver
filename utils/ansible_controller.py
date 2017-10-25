@@ -34,8 +34,8 @@ class AnsibleController(RequestHandler):
         return return_dict
 
     @coroutine
-    def run_playbook(self, host, user, tasks=list(), connection=None):
-        play = AnsibleTask(host, user, tasks, connection)
+    def run_playbook(self, host, user, tasks, port=22, connection=None):
+        play = AnsibleTask(host, user, tasks, port, connection)
         try:
             code = yield play.run_ansible_playbook()
         except Exception as ex:

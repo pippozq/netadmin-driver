@@ -10,11 +10,10 @@ class AnsbileModel(object):
         self.task_dict = dict()
 
     def ansible_task(self):
-        self.action_dict['module'] = self.ansible_module_name
         if len(self.action_dict.keys()) == 0:
             if self.args:
                 self.action_dict['args'] = self.args
+        self.action_dict['module'] = self.ansible_module_name
 
         self.task_dict['action'] = self.action_dict
-
         return self.task_dict

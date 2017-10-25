@@ -14,6 +14,7 @@ class JuniperCommandsController(AnsibleController):
     async def get(self):
         eg = dict()
         eg['host'] = dict(necessary=True, type='string or list[string,]')
+        eg['port'] = dict(necessary=False, type='int', default=22, )
         eg['user'] = dict(necessary=True, type='dict', name=dict(default='root'), password=dict(default=None))
         eg['command'] = dict(necessary=True, type='string', eg='ls')
         eg['display'] = dict(necessary=False, type='string', eg='json|xml|set', default='text')
@@ -25,14 +26,16 @@ class JuniperCommandsController(AnsibleController):
     async def post(self):
         try:
             host = self.vars['host']
+            port = self.vars['port'] if 'port' in self.vars else 22
             command = self.vars['command']
             display = self.vars['display'] if 'display' in self.vars else 'text'
             s = m.Juniper()
             s.commands(command, display)
             tasks = list()
             tasks.append(s.ansible_task())
-            result = await self.run_playbook(host, self.user, tasks, 'local')
+            result = await self.run_playbook(host, self.user, tasks, port=port, connection='local')
         except Exception as ex:
             self.write(self.return_json(-1, ex.args))
         else:
             self.write(result)
+            s

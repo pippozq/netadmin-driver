@@ -95,13 +95,15 @@ class AnsibleTask(TaskQueueManager):
 
     play_tasks_list = None
 
-    def __init__(self, host, user, tasks, connection=None, forks_number=5):
-        self.Options = namedtuple('Options', ['remote_user','connection','module_path', 'forks', 'become',
+    def __init__(self, host, user, tasks, port, connection=None, forks_number=5):
+        self.Options = namedtuple('Options', ['remote_port', 'remote_user','connection','module_path', 'forks', 'become',
                                               'become_method', 'become_user', 'check', 'transport','host_key_checking',
                                               'private_key_file','record_host_keys', 'diff'])
 
         self.variable_manager = VariableManager()
         self.loader = DataLoader()
+        self.port = port
+
         self.host = list()
         if isinstance(host, str):
             self.host.append(host)
@@ -117,7 +119,7 @@ class AnsibleTask(TaskQueueManager):
 
         # ssh key
         self.ssh_key_file = None if options.ssh_key_file is None else options.ssh_key_file
-        self.options = self.Options(remote_user=self.remote_user,
+        self.options = self.Options(remote_port=self.port, remote_user=self.remote_user,
                                     connection=DEFAULT_CONNECTION if connection is None else LOCAL_CONNECTION,
                                     module_path=None,
                                     forks=forks_number,
@@ -149,10 +151,10 @@ class AnsibleTask(TaskQueueManager):
         play_source = dict(
             name="Ansible Play",
             hosts=self.host,
+            port=self.port,
             gather_facts='no',
             tasks=self.play_tasks_list
         )
-
         play = Play().load(play_source, variable_manager=self.variable_manager, loader=self.loader)
         try:
             result = self.run(play)
