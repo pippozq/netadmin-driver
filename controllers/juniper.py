@@ -17,7 +17,8 @@ class JuniperCommandsController(AnsibleController):
         eg['port'] = dict(necessary=False, type='int', default=22, )
         eg['user'] = dict(necessary=True, type='dict', name=dict(default='root'), password=dict(default=None))
         eg['command'] = dict(necessary=True, type='string', eg='ls')
-        eg['display'] = dict(necessary=False, type='string', eg='json|xml|set', default='text')
+        eg['display'] = dict(necessary=False, type='string', eg='json|xml|set', default='text',
+                             warning='when command is not [show ***], this must be necessary and format must be json')
 
         self.write(self.return_json(0, eg))
 
@@ -38,4 +39,3 @@ class JuniperCommandsController(AnsibleController):
             self.write(self.return_json(-1, ex.args))
         else:
             self.write(result)
-            s
