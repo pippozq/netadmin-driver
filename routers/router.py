@@ -13,6 +13,7 @@ def init():
         (r'/ansible/ping', ansible.AnsiblePingController),
         (r'/ansible/shell', ansible.AnsibleShellController),
         (r'/ansible/juniper/command$', juniper.JuniperCommandsController),
+        (r'/ansible/juniper/shell$', juniper.JuniperShellController),
     ]
 
     return routers
