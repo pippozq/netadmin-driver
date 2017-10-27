@@ -13,7 +13,7 @@ class AnsiblePingController(AnsibleController):
 
     async def get(self):
         eg = dict()
-        eg['host'] = dict(necessary=True, type='string or list[string,]')
+        eg['hosts'] = dict(necessary=True, type='string or string,string,string')
         eg['user'] = dict(necessary=False, type='string', default='root')
 
         self.write(self.return_json(0, eg))
@@ -21,23 +21,28 @@ class AnsiblePingController(AnsibleController):
     @run_on_executor
     @asynchronous
     async def post(self):
-        try:
-            host = self.vars['host']
-            p = m.Ping()
-            tasks = list()
-            tasks.append(p.ansible_task())
-            result = await self.run_playbook(host, self.user, tasks)
-        except Exception as ex:
-            self.write(self.return_json(-1, ex.args))
+        if self.vars:
+            try:
+                hosts = self.get_hosts()
+                p = m.Ping()
+                tasks = list()
+                tasks.append(p.ansible_task())
+                result = await self.run_playbook(hosts, self.user, tasks)
+            except KeyError as ke:
+                self.write(self.return_json(-1, 'KeyError:{}'.format(ke.args)))
+            except Exception as ex:
+                self.write(self.return_json(-1, ex.args))
+            else:
+                self.write(result)
         else:
-            self.write(result)
+            self.write(self.return_json(-1, 'valid json'))
 
 
 class AnsibleShellController(AnsibleController):
 
     async def get(self):
         eg = dict()
-        eg['host'] = dict(necessary=True, type='string or list[string,]')
+        eg['hosts'] = dict(necessary=True, type='string or string,string,string')
         eg['user'] = dict(necessary=False, type='dict', name=dict(default='root'), password=dict(default=None))
         eg['command'] = dict(necessary=False, type='string', eg='ls')
 
@@ -46,14 +51,19 @@ class AnsibleShellController(AnsibleController):
     @run_on_executor
     @asynchronous
     async def post(self):
-        try:
-            host = self.vars['host']
-            command = self.vars['command']
-            s = m.Shell(command)
-            tasks = list()
-            tasks.append(s.ansible_task())
-            result = await self.run_playbook(host, self.user, tasks)
-        except Exception as ex:
-            self.write(self.return_json(-1, ex.args))
+        if self.vars:
+            try:
+                hosts = self.get_hosts()
+                command = self.vars['command']
+                s = m.Shell(command)
+                tasks = list()
+                tasks.append(s.ansible_task())
+                result = await self.run_playbook(hosts, self.user, tasks)
+            except KeyError as ke:
+                self.write(self.return_json(-1, 'KeyError:{}'.format(ke.args)))
+            except Exception as ex:
+                self.write(self.return_json(-1, ex.args))
+            else:
+                self.write(result)
         else:
-            self.write(result)
+            self.write(self.return_json(-1, 'valid json'))

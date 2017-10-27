@@ -47,12 +47,12 @@ class InnerInventoryManager(InventoryManager):
 
 class ResultCallback(CallbackBase):
 
-    RUN_OK = 0
-    RUN_ERROR = 1
-    RUN_FAILED_HOSTS = 2
-    RUN_UNREACHABLE_HOSTS = 4
-    RUN_FAILED_BREAK_PLAY = 8
-    RUN_UNKNOWN_ERROR = 255
+    RUN_OK = '0'
+    RUN_ERROR = '1'
+    RUN_FAILED_HOSTS = '2'
+    RUN_UNREACHABLE_HOSTS = '4'
+    RUN_FAILED_BREAK_PLAY = '8'
+    RUN_UNKNOWN_ERROR = '255'
 
     def __init__(self):
         self.result = dict()
@@ -109,7 +109,6 @@ class AnsibleTask(TaskQueueManager):
             self.host.append(host)
         elif isinstance(host, list):
             self.host = host
-
         if user is None:
             self.remote_user = 'root'
             self.password_dict['password'] = None

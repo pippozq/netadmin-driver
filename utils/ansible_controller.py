@@ -23,9 +23,12 @@ class AnsibleController(RequestHandler):
             try:
                 self.vars = json_decode(self.request.body)
             except ValueError:
-                self.write(self.return_json(-1, 'valid json'))
+                self.vars = None
+            else:
+                self.user = self.vars['user'] if 'user' in self.vars.keys() else None
 
-            self.user = self.vars['user'] if 'user' in self.vars.keys() else None
+    def get_hosts(self):
+        return self.vars['host'].split(',')
 
     def return_json(self, code, msg):
         return_dict = dict()
