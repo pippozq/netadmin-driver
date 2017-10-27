@@ -17,8 +17,7 @@ class AnsibleController(RequestHandler):
     vars = dict()
     user = dict()
 
-    @coroutine
-    def prepare(self):
+    async def prepare(self):
         if self.request.method == 'POST' or self.request.method == 'PATCH':
             try:
                 self.vars = json_decode(self.request.body)
