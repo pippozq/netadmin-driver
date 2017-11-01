@@ -23,7 +23,7 @@ class AnsiblePingController(AnsibleController):
     async def post(self):
         if self.vars:
             try:
-                hosts = self.get_hosts()
+                hosts = self.vars['hosts']
                 p = m.Ping()
                 tasks = list()
                 tasks.append(p.ansible_task())
@@ -53,7 +53,7 @@ class AnsibleShellController(AnsibleController):
     async def post(self):
         if self.vars:
             try:
-                hosts = self.get_hosts()
+                hosts = self.vars['hosts']
                 command = self.vars['command']
                 s = m.Shell(command)
                 tasks = list()

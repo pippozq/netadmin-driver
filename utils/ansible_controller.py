@@ -26,9 +26,6 @@ class AnsibleController(RequestHandler):
             else:
                 self.user = self.vars['user'] if 'user' in self.vars.keys() else None
 
-    def get_hosts(self):
-        return self.vars['hosts'].split(',')
-
     def return_json(self, code, msg):
         return_dict = dict()
         return_dict['status'] = str(code)

@@ -29,7 +29,7 @@ class JuniperCommandsController(AnsibleController):
     async def post(self):
         if self.vars:
             try:
-                host = self.get_hosts()
+                hosts = self.vars['hosts']
                 port = self.vars['port'] if 'port' in self.vars else 22
                 command = self.vars['command']
                 display = self.vars['display'] if 'display' in self.vars else 'text'
@@ -37,7 +37,7 @@ class JuniperCommandsController(AnsibleController):
                 s.commands(command, display)
                 tasks = list()
                 tasks.append(s.ansible_task())
-                result = await self.run_playbook(host, self.user, tasks, port=port, connection='local')
+                result = await self.run_playbook(hosts, self.user, tasks, port=port, connection='local')
             except KeyError as ke:
                 self.write(self.return_json(-1, 'KeyError:{}'.format(ke.args)))
             except Exception as ex:
@@ -63,7 +63,7 @@ class JuniperShellController(AnsibleController):
     async def post(self):
         if self.vars:
             try:
-                hosts = self.get_hosts()
+                hosts = self.vars['hosts']
                 port = self.vars['port'] if 'port' in self.vars else 22
                 command = self.vars['command']
                 result = dict()
