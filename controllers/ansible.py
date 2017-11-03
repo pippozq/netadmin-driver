@@ -35,7 +35,7 @@ class AnsiblePingController(AnsibleController):
             else:
                 self.write(result)
         else:
-            self.write(self.return_json(-1, 'valid json'))
+            self.write(self.return_json(-1, 'invalid json'))
 
 
 class AnsibleShellController(AnsibleController):
@@ -66,4 +66,4 @@ class AnsibleShellController(AnsibleController):
             else:
                 self.write(result)
         else:
-            self.write(self.return_json(-1, 'valid json'))
+            self.write(self.return_json(-1, 'invalid json'))

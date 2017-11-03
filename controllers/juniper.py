@@ -45,7 +45,7 @@ class JuniperCommandsController(AnsibleController):
             else:
                 self.write(result)
         else:
-            self.write(self.return_json(-1, 'valid json'))
+            self.write(self.return_json(-1, 'invalid json'))
 
 
 class JuniperShellController(AnsibleController):
@@ -78,7 +78,7 @@ class JuniperShellController(AnsibleController):
             else:
                 self.write(self.return_json(0, result))
         else:
-            self.write(self.return_json(-1, 'valid json'))
+            self.write(self.return_json(-1, 'invalid json'))
 
     async def execute_shell(self, dev, command):
         shell = StartShell(dev)

@@ -18,7 +18,7 @@ class HealthController(AnsibleController):
         now_time = datetime.now()
         now_time = now_time.strftime(options.date_fmt)
         check_msg = {
-            'service': 'cmdb-ansible',
+            'service': 'ansible',
             'status': 200,
             'time': now_time
         }
