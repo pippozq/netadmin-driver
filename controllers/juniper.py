@@ -1,5 +1,4 @@
-from tornado.concurrent import run_on_executor
-from tornado.web import asynchronous
+from tornado.gen import coroutine
 from utils.ansible_controller import AnsibleController
 from models import ansible_model as m
 
@@ -24,9 +23,8 @@ class JuniperCommandsController(AnsibleController):
 
         self.write(self.return_json(0, eg))
 
-    @run_on_executor
-    @asynchronous
-    async def post(self):
+    @coroutine
+    def post(self):
         if self.vars:
             try:
                 hosts = self.vars['hosts']
@@ -37,7 +35,7 @@ class JuniperCommandsController(AnsibleController):
                 s.commands(command, display)
                 tasks = list()
                 tasks.append(s.ansible_task())
-                result = await self.run_playbook(hosts, self.user, tasks, port=port, connection='local')
+                result = yield self.run_playbook(hosts, self.user, tasks, port=port, connection='local')
             except KeyError as ke:
                 self.write(self.return_json(-1, 'KeyError:{}'.format(ke.args)))
             except Exception as ex:
@@ -58,9 +56,8 @@ class JuniperShellController(AnsibleController):
 
         self.write(self.return_json(0, eg))
 
-    @run_on_executor
-    @asynchronous
-    async def post(self):
+    @coroutine
+    def post(self):
         if self.vars:
             try:
                 hosts = self.vars['hosts']
@@ -69,7 +66,7 @@ class JuniperShellController(AnsibleController):
                 result = dict()
                 for host in hosts:
                     dev = Device(host=host, user=self.user['name'], password=self.user['password'], port=port)
-                    res = await self.execute_shell(dev, command)
+                    res = yield self.executor.submit(self.execute_shell, dev, command)
                     result[host] = res
             except KeyError as ke:
                 self.write(self.return_json(-1, 'KeyError:{}'.format(ke.args)))
@@ -80,7 +77,7 @@ class JuniperShellController(AnsibleController):
         else:
             self.write(self.return_json(-1, 'invalid json'))
 
-    async def execute_shell(self, dev, command):
+    def execute_shell(self, dev, command):
         shell = StartShell(dev)
         shell.open()
         result = shell.run("cli -c " + "\"" + command + "\"")

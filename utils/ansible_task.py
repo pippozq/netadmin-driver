@@ -7,7 +7,6 @@ from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.plugins.callback import CallbackBase
 
-from tornado.gen import coroutine
 from tornado.options import options
 
 __metaclass__ = type
@@ -144,7 +143,6 @@ class AnsibleTask(TaskQueueManager):
     def get_result(self):
         return self.results_callback.get_ansible_result()
 
-    @coroutine
     def run_ansible_playbook(self):
         tqm = None
         play_source = dict(

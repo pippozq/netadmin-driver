@@ -36,7 +36,7 @@ class AnsibleController(RequestHandler):
     def run_playbook(self, host, user, tasks, port=22, connection=None):
         play = AnsibleTask(host, user, tasks, port, connection)
         try:
-            code = yield play.run_ansible_playbook()
+            code = yield self.executor.submit(play.run_ansible_playbook)
         except Exception as ex:
             raise ex
         else:
