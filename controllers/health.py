@@ -1,20 +1,14 @@
-from __future__ import print_function
+from datetime import datetime
+from tornado.options import options
+from utils.ansible_controller import AnsibleController
 
 import sys
-from datetime import datetime
 
 sys.path.append('.')
 
-from tornado.options import options
-from tornado.gen import coroutine
-
-from utils.ansible_controller import AnsibleController
-
 
 class HealthController(AnsibleController):
-
-    @coroutine
-    def get(self):
+    async def get(self):
         now_time = datetime.now()
         now_time = now_time.strftime(options.date_fmt)
         check_msg = {

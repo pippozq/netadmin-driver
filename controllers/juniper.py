@@ -1,13 +1,9 @@
-from tornado.gen import coroutine
 from utils.ansible_controller import AnsibleController
 from models import ansible_model as m
 
 import sys
 
 sys.path.append('.')
-
-from jnpr.junos import Device
-from jnpr.junos.utils.start_shell import StartShell
 
 
 class JuniperCommandsController(AnsibleController):
@@ -23,8 +19,7 @@ class JuniperCommandsController(AnsibleController):
 
         self.write(self.return_json(0, eg))
 
-    @coroutine
-    def post(self):
+    async def post(self):
         if self.vars:
             try:
                 hosts = self.vars['hosts']
@@ -35,7 +30,7 @@ class JuniperCommandsController(AnsibleController):
                 s.commands(command, display)
                 tasks = list()
                 tasks.append(s.ansible_task())
-                result = yield self.run_playbook(hosts, self.user, tasks, port=port, connection='local')
+                result = await self.run_playbook(hosts, self.user, tasks, port=port, connection='local')
             except KeyError as ke:
                 self.write(self.return_json(-1, 'KeyError:{}'.format(ke.args)))
             except Exception as ex:
@@ -44,43 +39,3 @@ class JuniperCommandsController(AnsibleController):
                 self.write(result)
         else:
             self.write(self.return_json(-1, 'invalid json'))
-
-
-class JuniperShellController(AnsibleController):
-    async def get(self):
-        eg = dict()
-        eg['hosts'] = dict(necessary=True, type='string or string,string,string')
-        eg['port'] = dict(necessary=False, type='int', default=22, )
-        eg['user'] = dict(necessary=True, type='dict', name='', password='')
-        eg['command'] = dict(necessary=True, type='string', eg='ls')
-
-        self.write(self.return_json(0, eg))
-
-    @coroutine
-    def post(self):
-        if self.vars:
-            try:
-                hosts = self.vars['hosts']
-                port = self.vars['port'] if 'port' in self.vars else 22
-                command = self.vars['command']
-                result = dict()
-                for host in hosts:
-                    dev = Device(host=host, user=self.user['name'], password=self.user['password'], port=port)
-                    res = yield self.executor.submit(self.execute_shell, dev, command)
-                    result[host] = res
-            except KeyError as ke:
-                self.write(self.return_json(-1, 'KeyError:{}'.format(ke.args)))
-            except Exception as ex:
-                self.write(self.return_json(-1, ex.args))
-            else:
-                self.write(self.return_json(0, result))
-        else:
-            self.write(self.return_json(-1, 'invalid json'))
-
-    def execute_shell(self, dev, command):
-        shell = StartShell(dev)
-        shell.open()
-        result = shell.run("cli -c " + "\"" + command + "\"")
-        shell.close()
-
-        return result[1]

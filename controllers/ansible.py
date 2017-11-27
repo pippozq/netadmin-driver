@@ -1,16 +1,12 @@
-from __future__ import print_function
-
-from tornado.concurrent import run_on_executor
-from tornado.web import asynchronous
 from utils.ansible_controller import AnsibleController
 from models import ansible_model as m
 
 import sys
+
 sys.path.append('.')
 
 
 class AnsiblePingController(AnsibleController):
-
     async def get(self):
         eg = dict()
         eg['hosts'] = dict(necessary=True, type='string or string,string,string')
@@ -18,8 +14,6 @@ class AnsiblePingController(AnsibleController):
 
         self.write(self.return_json(0, eg))
 
-    @run_on_executor
-    @asynchronous
     async def post(self):
         if self.vars:
             try:
@@ -39,7 +33,6 @@ class AnsiblePingController(AnsibleController):
 
 
 class AnsibleShellController(AnsibleController):
-
     async def get(self):
         eg = dict()
         eg['hosts'] = dict(necessary=True, type='string or string,string,string')
@@ -48,8 +41,6 @@ class AnsibleShellController(AnsibleController):
 
         self.write(self.return_json(0, eg))
 
-    @run_on_executor
-    @asynchronous
     async def post(self):
         if self.vars:
             try:
