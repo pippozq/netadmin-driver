@@ -1,4 +1,4 @@
-from controllers import health, ansible, juniper
+from controllers import health, ansible, juniper, cisco
 
 import sys
 
@@ -13,7 +13,11 @@ def init():
         (r'/ansible/shell', ansible.AnsibleShellController),
 
         # juniper
-        (r'/ansible/juniper/command$', juniper.JuniperCommandsController)
+        (r'/ansible/juniper/command$', juniper.JuniperCommandsController),
+
+        # cisco
+        (r'/ansible/cisco/command$', cisco.CiscoCommandsController)
+
     ]
 
     return routers

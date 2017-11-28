@@ -30,3 +30,11 @@ class Juniper(AnsbileModel):
         self.action_dict['display'] = display
 
 
+class Cisco(AnsbileModel):
+    def __init__(self):
+        super(Cisco, self).__init__(None)
+
+    def commands(self, args):
+        self.ansible_module_name = 'ios_command'
+        self.action_dict['commands'] = args
+
