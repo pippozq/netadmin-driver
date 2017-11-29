@@ -16,7 +16,8 @@ def init():
         (r'/ansible/juniper/command$', juniper.JuniperCommandsController),
 
         # cisco
-        (r'/ansible/cisco/command$', cisco.CiscoCommandsController)
+        (r'/ansible/cisco/command$', cisco.CiscoCommandsController),
+        (r'/ansible/cisco/config$', cisco.CiscoConfigController)
 
     ]
 
