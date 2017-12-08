@@ -1,13 +1,13 @@
 from datetime import datetime
 from tornado.options import options
-from utils.ansible_controller import AnsibleController
+from utils.base_controller import BaseController
 
 import sys
 
 sys.path.append('.')
 
 
-class HealthController(AnsibleController):
+class HealthController(BaseController):
     async def get(self):
         now_time = datetime.now()
         now_time = now_time.strftime(options.date_fmt)

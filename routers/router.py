@@ -1,4 +1,4 @@
-from controllers import health, ansible, juniper, cisco
+from controllers import health, juniper, cisco
 
 import sys
 
@@ -8,16 +8,16 @@ sys.path.append('.')
 # Return Router
 def init():
     routers = [
-        (r'/ansible/status$', health.HealthController),
-        (r'/ansible/ping', ansible.AnsiblePingController),
-        (r'/ansible/shell', ansible.AnsibleShellController),
+        (r'/netdriver/status$', health.HealthController),
 
         # juniper
-        (r'/ansible/juniper/command$', juniper.JuniperCommandsController),
+        (r'/netdriver/juniper/command$', juniper.JuniperCommandsController),
+        # (r'/netdriver/juniper/shell$', juniper.JuniperShellController),
+        (r'/netdriver/juniper/config$', juniper.JuniperConfigController),
 
         # cisco
-        (r'/ansible/cisco/command$', cisco.CiscoCommandsController),
-        (r'/ansible/cisco/config$', cisco.CiscoConfigController)
+        (r'/netdriver/cisco/command$', cisco.CiscoCommandsController),
+        (r'/netdriver/cisco/config$', cisco.CiscoConfigController)
 
     ]
 

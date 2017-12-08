@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from tornado.web import RequestHandler
-from tornado.gen import coroutine
+from tornado.platform.asyncio import to_tornado_future
 from tornado.options import define, options
 from tornado.escape import json_decode
 from concurrent.futures import ThreadPoolExecutor
@@ -15,7 +15,7 @@ sys.path.append('.')
 define("thread_count", help='thread count', type=int)
 
 
-class AnsibleController(RequestHandler):
+class BaseController(RequestHandler):
     executor = ThreadPoolExecutor(options.thread_count)
     vars = dict()
     user = dict()
@@ -35,11 +35,10 @@ class AnsibleController(RequestHandler):
         return_dict['msg'] = msg
         return return_dict
 
-    @coroutine
-    def run_playbook(self, host, user, tasks, port=22, connection=None):
+    async def run_playbook(self, host, user, tasks, port=22, connection=None):
         play = AnsibleTask(host, user, tasks, port, connection)
         try:
-            code = yield self.executor.submit(play.run_ansible_playbook)
+            code = await to_tornado_future(self.executor.submit(play.run_ansible_playbook))
         except Exception as ex:
             raise ex
         else:

@@ -1,6 +1,6 @@
 from tornado.options import define, options
-from tornado.gen import coroutine
-from utils.ansible_controller import AnsibleController
+from tornado.platform.asyncio import to_tornado_future
+from utils.base_controller import BaseController
 from models import ansible_model as m
 
 import sys
@@ -11,7 +11,7 @@ sys.path.append('.')
 define("cisco_temp_path", help='cisco configuration file temporary path', type=str)
 
 
-class CiscoCommandsController(AnsibleController):
+class CiscoCommandsController(BaseController):
     async def get(self):
         eg = dict()
         eg['hosts'] = dict(necessary=True, type='string or string,string,string')
@@ -42,7 +42,7 @@ class CiscoCommandsController(AnsibleController):
             self.write(self.return_json(-1, 'invalid json'))
 
 
-class CiscoConfigController(AnsibleController):
+class CiscoConfigController(BaseController):
     async def get(self):
         eg = dict()
         eg['hosts'] = dict(necessary=True, type='string or string,string,string')
@@ -53,8 +53,7 @@ class CiscoConfigController(AnsibleController):
 
         self.write(self.return_json(0, eg))
 
-    @coroutine
-    def post(self):
+    async def post(self):
         if self.vars:
             try:
                 hosts = self.vars['hosts']
@@ -62,13 +61,13 @@ class CiscoConfigController(AnsibleController):
                 file_content = self.vars['file_content']
                 blob_id = self.vars['blob_id']
 
-                yield self.executor.submit(self.write_to_file, blob_id, file_content)
+                await to_tornado_future(self.executor.submit(self.write_to_file, blob_id, file_content))
                 s = m.Cisco()
                 s.config('{}/{}'.format(options.cisco_temp_path, blob_id))
                 tasks = list()
                 tasks.append(s.ansible_task())
 
-                result = yield self.run_playbook(hosts, self.user, tasks, port=port, connection='local')
+                result = await self.run_playbook(hosts, self.user, tasks, port=port, connection='local')
             except KeyError as ke:
                 self.write(self.return_json(-1, 'KeyError:{}'.format(ke.args)))
             except Exception as ex:
