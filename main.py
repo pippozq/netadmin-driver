@@ -10,15 +10,12 @@ define("conf", help="Config File", type=str)
 define("port", help='Ansible Web Port', type=int)
 define("date_fmt", help='data time', type=str)
 define("ssh_key_file", help='data time', type=str)
+define("debug", help='debug on', type=bool)
 
 
 class App(Application):
     def __init__(self, debug=False):
         settings = {
-            "cookie_secret": "61oEdfTzKXdQAGaYddkL5fgEdf123mGeJJFfusYh7EQnp2fXdTP1o/Vo=",
-            'login_url': '/login.html',
-            'xsrf_cookies': False,
-            'max_age_days': 1,
             'debug': debug,
         }
         handles = router.init()
@@ -28,7 +25,7 @@ class App(Application):
 if __name__ == "__main__":
     options.parse_command_line()
     options.parse_config_file('conf/%s.conf' % options.conf)
-    app = App(debug=True)
+    app = App(debug=options.debug)
     http_server = HTTPServer(app)
     http_server.listen(options.port)
     IOLoop.instance().start()
