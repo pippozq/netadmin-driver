@@ -37,7 +37,16 @@ class CiscoCommandsController(BaseController):
             except Exception as ex:
                 self.write(self.return_json(-1, ex.args))
             else:
-                self.write(result)
+                msg = list()
+                for host in hosts:
+                    msg.append('-------------------------------------\n{}\n'.format(host))
+                    if result['msg'][host]['status'] == "0":
+                        for item in result['msg'][host]['msg'][0]:
+                            msg.append('{}\n'.format(item))
+                    else:
+                        msg.append('Command Error, Status: {}, Error: {}\n'.format(
+                            result['msg'][host]['status'], result['msg'][host]['msg']))
+                self.write(self.return_json(0, msg))
         else:
             self.write(self.return_json(-1, 'invalid json'))
 
@@ -60,7 +69,6 @@ class CiscoConfigController(BaseController):
                 port = self.vars['port'] if 'port' in self.vars else 22
                 file_content = self.vars['file_content']
                 blob_id = self.vars['blob_id']
-
                 await to_tornado_future(self.executor.submit(self.write_to_file, blob_id, file_content))
                 s = m.Cisco()
                 s.config('{}/{}'.format(options.cisco_temp_path, blob_id))
@@ -73,8 +81,30 @@ class CiscoConfigController(BaseController):
             except Exception as ex:
                 self.write(self.return_json(-1, ex.args))
             else:
-                yield self.executor.submit(self.delete_temp_file, blob_id)
-                self.write(result)
+                await to_tornado_future(self.executor.submit(self.delete_temp_file, blob_id))
+                msg = list()
+                for host in hosts:
+                    msg.append('-----------------------------\n{}\n'.format(host))
+
+                    if result['msg'][host]['status'] == '0':
+                        if not result['msg'][host]['msg']['failed']:
+                            if result['msg']['msg']['changed']:
+                                if 'updates' in result['msg'][host]['msg']:
+                                    for line in result['msg'][host]['msg']['updates']:
+                                        msg.append('Command: {} Status: Execute Success\n'.format(line))
+                                else:
+                                    msg.append('Nothing Updated\n')
+                            else:
+                                msg.append(
+                                    'Nothing Updated\n')
+                        else:
+                            msg.append(
+                                'Error:{}\n'.format(result['msg'][host]['msg']['msg']))
+                    else:
+                        msg.append(
+                            'Error:{}\n'.format(result['msg'][host]['msg']['msg']))
+
+                self.write(self.return_json(0, msg))
         else:
             self.write(self.return_json(-1, 'invalid json'))
 
