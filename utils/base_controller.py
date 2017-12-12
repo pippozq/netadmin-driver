@@ -31,7 +31,7 @@ class BaseController(RequestHandler):
 
     def return_json(self, code, msg):
         return_dict = dict()
-        return_dict['status'] = str(code)
+        return_dict['status'] = code
         return_dict['msg'] = msg
         return return_dict
 

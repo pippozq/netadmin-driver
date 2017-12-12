@@ -102,40 +102,44 @@ class JuniperConfigController(BaseController):
                 self.write(self.return_json(-1, 'Json No arg: {}'.format(err)))
             else:
                 try:
-                    cmd_result = list()
+                    msg = list()
+                    result = dict()
                     for host in hosts:
                         d = Junos(host, user, port)
-                        h, j, e = await to_tornado_future(
+                        res, suc = await to_tornado_future(
                             self.executor.submit(self.get_device_result, d, command_lines.split("\n")))
-                        r = dict()
-                        r[host] = dict(command=j, success=e)
-                        cmd_result.append(r)
+                        result[host] = res
                 except Exception as err:
                     self.write(self.return_json(-1, err.args))
                 else:
-                    self.write(self.return_json(0, cmd_result))
+                    for host in result.keys():
+                        msg.append('-----------------------------\n{}\n'.format(host))
+
+                        for r in result[host]:
+                            msg.append('{}\n'.format(r))
+
+                    self.write(self.return_json(0, msg))
         else:
             self.write(self.return_json(-1, 'Invalid Json'))
 
     @staticmethod
     def get_device_result(d, command_lines=list()):
         success = True
-        cmd_result = list()
-        result_json = dict()
+        result = list()
         try:
             d.open_connection()
             for line in command_lines:
                 if line != "":
                     ok, err_msg = d.run_config(line)
                     if ok:
-                        result_json[line] = 'ok'
+                        result.append('{} Done'.format(line))
                     else:
-                        result_json[line] = 'error:{}'.format(err_msg)
+                        result.append('{} {}'.format(line, err_msg))
                         success = False
                         break
         except Exception as e:
             success = False
-            result_json['error'] = e.args
+            result.append(e.args)
         finally:
             d.close()
-            return cmd_result, result_json, success
+            return result, success

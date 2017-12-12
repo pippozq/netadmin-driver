@@ -12,7 +12,6 @@ def init():
 
         # juniper
         (r'/netdriver/juniper/command$', juniper.JuniperCommandsController),
-        # (r'/netdriver/juniper/shell$', juniper.JuniperShellController),
         (r'/netdriver/juniper/config$', juniper.JuniperConfigController),
 
         # cisco
