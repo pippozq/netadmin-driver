@@ -88,7 +88,7 @@ class CiscoConfigController(BaseController):
 
                     if result['msg'][host]['status'] == '0':
                         if not result['msg'][host]['msg']['failed']:
-                            if result['msg']['msg']['changed']:
+                            if result['msg'][host]['msg']['changed']:
                                 if 'updates' in result['msg'][host]['msg']:
                                     for line in result['msg'][host]['msg']['updates']:
                                         msg.append('Command: {} Status: Execute Success\n'.format(line))
