@@ -1,9 +1,30 @@
 from utils.base_controller import BaseController
 from tornado.platform.asyncio import to_tornado_future
+from tornado.options import define, options
 from utils.junos_util import Junos
+import multiprocessing
 import sys
 
 sys.path.append('.')
+
+define("multiprocess", help='multiprocess number', type=int)
+
+
+def multiple_execute(func, hosts, user, port, command):
+    result_dict = dict()
+    result_list = list()
+    pool = multiprocessing.Pool(processes=options.multiprocess)
+    for host in hosts:
+        res = pool.apply_async(func, args=(host, user, port, command))
+        result_list.append(res)
+    pool.close()
+    pool.join()
+
+    for r in result_list:
+        res = r.get()
+        result_dict[res[1]] = res[2]
+
+    return result_dict
 
 
 class JuniperCommandsController(BaseController):
@@ -23,12 +44,8 @@ class JuniperCommandsController(BaseController):
                 hosts = self.vars['hosts']
                 port = self.vars['port'] if 'port' in self.vars else 22
                 command = self.vars['command']
-                result = dict()
-                for host in hosts:
-                    dev = Junos(host=host, user=self.user, port=port)
-                    success, res = await to_tornado_future(self.executor.submit(dev.execute_shell, command))
-                    result[host] = res
-
+                result = await to_tornado_future(
+                    self.executor.submit(multiple_execute, self.execute_command, hosts, self.user, port, command))
             except Exception as ex:
                 self.write(self.return_json(-1, ex.args))
             else:
@@ -44,6 +61,12 @@ class JuniperCommandsController(BaseController):
             msg.append(
                 'invalid json')
             self.write(self.return_json(-1, msg))
+
+    @staticmethod
+    def execute_command(host, user, port, command):
+        dev = Junos(host=host, user=user, port=port)
+        success, res = dev.execute_shell(command)
+        return success, host, res
 
 
 class JuniperConfigController(BaseController):
@@ -67,12 +90,9 @@ class JuniperConfigController(BaseController):
             else:
                 try:
                     msg = list()
-                    result = dict()
-                    for host in hosts:
-                        d = Junos(host, user, port)
-                        res, suc = await to_tornado_future(
-                            self.executor.submit(self.get_device_result, d, command_lines.split("\n")))
-                        result[host] = res
+                    result = await to_tornado_future(
+                        self.executor.submit(multiple_execute, self.get_device_result, hosts, user, port,
+                                             command_lines.split('\n')))
                 except Exception as err:
                     self.write(self.return_json(-1, err.args))
                 else:
@@ -87,7 +107,9 @@ class JuniperConfigController(BaseController):
             self.write(self.return_json(-1, 'Invalid Json'))
 
     @staticmethod
-    def get_device_result(d, command_lines=list()):
+    def get_device_result(host, user, port, command_lines):
+
+        d = Junos(host, user, port)
         success = True
         result = list()
         try:
@@ -106,4 +128,4 @@ class JuniperConfigController(BaseController):
             result.append(e.args)
         finally:
             d.close()
-            return result, success
+            return success, host, result
