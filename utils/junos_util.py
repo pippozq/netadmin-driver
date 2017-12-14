@@ -2,7 +2,6 @@ from jnpr.junos import Device
 from jnpr.junos.utils.config import Config
 from jnpr.junos import exception as junos_exception
 from jnpr.junos.utils.start_shell import StartShell
-
 from tornado.log import gen_log
 
 Device.auto_probe = 10
@@ -50,10 +49,14 @@ class Junos(object):
 
     def execute_shell(self, command):
         shell = StartShell(self.device)
-        shell.open()
-        result = shell.run("cli -c " + "\"" + command + "\"")
-        shell.close()
-        return result[0], result[1]
+        try:
+            shell.open()
+            result = shell.run("cli -c " + "\"" + command + "\"")
+            shell.close()
+        except Exception as err:
+            return False, err.args.__str__()
+        else:
+            return result[0], result[1]
 
     def close(self):
         try:
