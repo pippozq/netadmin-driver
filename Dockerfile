@@ -6,8 +6,8 @@ RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-
+ENV CONF=dev
 EXPOSE 8080
 
-ENTRYPOINT  python3 main.py -conf=dev
+ENTRYPOINT  python3 main.py -conf=$CONF
 
