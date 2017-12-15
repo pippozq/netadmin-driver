@@ -30,7 +30,7 @@ def multiple_execute(func, hosts, user, port, command):
 class JuniperCommandsController(BaseController):
     async def get(self):
         eg = dict()
-        eg['hosts'] = dict(necessary=True, type='string or string,string,string')
+        eg['hosts'] = dict(necessary=True, type='string list')
         eg['port'] = dict(necessary=False, type='int', default=22, )
         eg['user'] = dict(necessary=True, type='dict', name=dict(default='root'), password=dict(default=None))
         eg['command'] = dict(necessary=True, type='string', eg='ls')
@@ -72,10 +72,10 @@ class JuniperCommandsController(BaseController):
 class JuniperConfigController(BaseController):
     async def get(self):
         eg = dict()
-        eg['hosts'] = dict(necessary=True, type='string or string,string,string')
+        eg['hosts'] = dict(necessary=True, type='string list')
         eg['port'] = dict(necessary=False, type='int', default=22, )
         eg['user'] = dict(necessary=True, type='dict', name=dict(default='root'), password=dict(default=None))
-        eg['file_content'] = dict(necessary=True, type='string', eg='ls')
+        eg['command'] = dict(necessary=True, type='string', eg='ls')
         self.write(self.return_json(0, eg))
 
     async def post(self):
